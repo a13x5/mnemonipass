@@ -58,9 +58,9 @@ mixed.")
      gambit-495
      (list gcc-toolchain "static")))
    
-   (synopsis "Mnemonic passwords generator")
+   (synopsis "Mnemonic password generator")
    (home-page "https://github.com/a13x5/mnemonipass")
-   (description "Mnemonic passwords generator")
+   (description "Password generator which generates passwords that are actually easy to remember.")
    (license gpl3+)))
 
 mnemonipass
