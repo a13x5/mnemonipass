@@ -2,16 +2,16 @@
 
 (define (characters-pool capitals numbers specials)
   (let loop ((pool 26)
-	     (capitalize capitalize)
+	     (capitals capitals)
 	     (numbers numbers)
 	     (specials specials))
     (cond
-     (capitalize
+     (capitals
       (loop (* pool 2) #f numbers specials))
      (numbers
-      (loop (+ pool 10) capitalize #f specials))
+      (loop (+ pool 10) capitals #f specials))
      (specials
-      (loop (+ pool 10) capitalize numbers #f))
+      (loop (+ pool 10) capitals numbers #f))
      (else pool))))
 
 ;; Based on https://www.pleacher.com/mp/mlessons/algebra/entropy.html
