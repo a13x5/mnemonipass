@@ -17,6 +17,17 @@
    (make-cli-option 'toggle "C" "capitalize" "Capitalize each word" #f)
    (make-cli-option 'toggle "h" "help" "Print help" #f)))
 
+(define (make-help-message cli-opts)
+  (string-append "Usage: mnemonipass [OPTIONS]\n"
+		 "Creates a mnemonic password from dictionary files provided.\n"
+		 "\n"
+		 (make-cli-options-description cli-opts)
+		 "\n"
+		 "Examples:\n"
+		 "mnemonipass -n ./nouns -v ./verbs    Creates simple password using nouns and verbs files as dictionary.\n"
+		 "mnemonipass -n ./nouns -v ./verbs -a ./adverbs -j ./adjectives -w 6 -d 3 -s     Creates stronger password using 4 dictionaries, 3 digits with special characters.\n"
+		 "\n"))
+
 (define (string-split str char)
     (let loop ((str-lst (string->list str)) (word '()) (out '()))
       (cond
