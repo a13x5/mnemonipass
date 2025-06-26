@@ -1,15 +1,12 @@
 (import (srfi 48))
 (include "cli-parsing.scm")
 (include "pass-entropy.scm")
+(include "dicts/dicts.scm")
 
 (define specials '("!" "@" "#" "$" "%" "^" "&" "*" "(" ")"))
 
 (define cli-options
   (list
-   (make-cli-option 'string "n" "nouns" "Nouns dictionary file name" #!void)
-   (make-cli-option 'string "v" "verbs" "Verbs dictionary file name" #!void)
-   (make-cli-option 'string "j" "adjectives" "Adjectives dictionary file name" #!void) 
-   (make-cli-option 'string "a" "adverbs" "Adverbs dictionary file name" #!void)
    (make-cli-option 'number "w" "words" "A number of words to use [maximum 6]" 3)
    (make-cli-option 'number "d" "digits" "A number of digits to use" 0)
    (make-cli-option 'number "c" "characters" "A number of characters to use from each word" 3)
@@ -24,18 +21,9 @@
 		 (make-cli-options-description cli-opts)
 		 "\n"
 		 "Examples:\n"
-		 "mnemonipass -n ./nouns -v ./verbs    Creates simple password using nouns and verbs files as dictionary.\n"
-		 "mnemonipass -n ./nouns -v ./verbs -a ./adverbs -j ./adjectives -w 6 -d 3 -s     Creates stronger password using 4 dictionaries, 3 digits with special characters.\n"
-		 "\n"))
-
-(define (string-split str char)
-    (let loop ((str-lst (string->list str)) (word '()) (out '()))
-      (cond
-       ((null-list? str-lst) 
-	(map list->string (reverse (cons (reverse word) out))))
-       ((char=? char (car str-lst))
-	(loop (cdr str-lst) '() (cons (reverse word) out)))
-       (else (loop (cdr str-lst) (cons (car str-lst) word) out)))))
+		 "mnemonipass  -  Creates simple password using only nouns and verbs\n"
+		 "mnemonipass -w 6 -d 3 -s  -  Creates stronger password using 4 parts of speech, 3 digits with special characters.\n"
+		 ))
 
 (define (string-capitalize str)
   (let ((str-lst (string->list str)))
@@ -50,15 +38,6 @@
 
 (define (nth-random lst)
   (nth (random-integer (length lst)) lst))
-
-(define (dictfile->list file)
-  (if (eq? file #!void)
-      #!void
-      (filter (lambda (str) (not (string=? "" str)))
-	      (string-split
-	       (call-with-input-file file
-		 (lambda (port) (read-line port #f)))
-	       #\newline))))
 
 (define (make-digits digits-num specials?)
   (let ((nspecials
@@ -81,17 +60,11 @@
    ((= words-num 3)
     (list (nth-random nouns) (nth-random verbs) (nth-random nouns)))
    ((= words-num 4)
-    (if (eq? adjectives #!void)
-	(error "Adjectives must be passed when the number of words is more than 3")
-	(list (nth-random adjectives) (nth-random nouns) (nth-random verbs) (nth-random nouns))))
+    (list (nth-random adjectives) (nth-random nouns) (nth-random verbs) (nth-random nouns)))
    ((= words-num 5)
-    (if (eq? adjectives #!void)
-	(error "Adjectives must be passed when the number of words is more than 3")
-	(list (nth-random adjectives) (nth-random nouns) (nth-random verbs) (nth-random adjectives) (nth-random nouns))))
+    (list (nth-random adjectives) (nth-random nouns) (nth-random verbs) (nth-random adjectives) (nth-random nouns)))
    ((= words-num 6)
-    (if (or (eq? adjectives #!void) (eq? adverbs #!void))
-	(error "Both adjectives and adverbs must be passed when the number of words is more than 5")
-    (list (nth-random adjectives) (nth-random nouns) (nth-random adverbs) (nth-random verbs) (nth-random adjectives) (nth-random nouns))))
+    (list (nth-random adjectives) (nth-random nouns) (nth-random adverbs) (nth-random verbs) (nth-random adjectives) (nth-random nouns)))
    (else (error "Invalid number of words. Please specify range from 3 to 6"))))
 
 (define (make-phrase words digits capitalize)
@@ -114,7 +87,6 @@
 					       (make-help-message cli-options)))
 			      (exit 1))
 			  (lambda () (parse-cli (command-line) cli-options))))
-  
   (define (get-opt opt)
     (get-option-value opt cli-opts-hash cli-options))
 
@@ -122,20 +94,13 @@
    ((get-opt "help")
     (display (make-help-message cli-options))
     (exit 0))
-   ((or (eq? #!void (get-opt "nouns")) (eq? #!void (get-opt "verbs")))
-    (display (format "Both nouns and verbs options are mandatory~%~%~a" (make-help-message cli-options)))
-    (exit 1))
    ((and (get-opt "specials") (= (get-opt "digits") 0))
     (display "The specials option must be used with digits\n")
     (exit 1)))
   
   (random-source-randomize! default-random-source)
   
-  (let* ((nouns (dictfile->list (get-opt "nouns")))
-	 (verbs (dictfile->list (get-opt "verbs")))
-	 (adjectives (dictfile->list (get-opt "adjectives")))
-	 (adverbs (dictfile->list (get-opt "adverbs")))
-	 (words-num (get-opt "words"))
+  (let* ((words-num (get-opt "words"))
 	 (digits-num (get-opt "digits"))
 	 (capitalize (get-opt "capitalize"))
 	 (use-specials (get-opt "specials"))
